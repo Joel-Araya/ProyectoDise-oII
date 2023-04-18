@@ -1,207 +1,112 @@
-; Definición de registros y constantes
-; Suponemos que los semáforos y peatonales están representados por bits en registros de control de hardware
+	
+	AREA myData, DATA
 
-; Registros de control de semáforos
-SEMAFORO0 equ 0x1000
-SEMAFORO1 equ 0x1001
-SEMAFORO2 equ 0x1002
-SEMAFORO3 equ 0x1003
-
-; Registros de control de peatonales
-PEATONAL0 equ 0x2000
-PEATONAL1 equ 0x2001
-PEATONAL2 equ 0x2002
-PEATONAL3 equ 0x2003
-
-; Colores de semáforo
-VERDE equ 0x01
-AMARILLO equ 0x02
-ROJO equ 0x00
-
-; Definir una constante para representar el valor de espera en segundos
-WAIT_TIME equ 25000000 ; 25 segundos (asumiendo 1 millón de ciclos de reloj por segundo)
-
-; Subrutina para esperar un tiempo determinado
-EsperarTiempo:
-    MOV R1, #0 ; Inicializar contador en 0
-    MOV R2, #0 ; Inicializar registro temporal en 0
-
-    EsperarLoop:
-        ADD R1, R1, #1 ; Incrementar contador en 1
-        CMP R1, WAIT_TIME ; Comparar contador con valor de espera
-        BNE EsperarLoop ; Saltar a EsperarLoop si el contador no ha alcanzado el valor de espera
-
-    BX LR ; Retornar a la rutina llamadora
+;  COLORES DE SEMAFORO
+ROJO EQU 0 
+AMARILLO EQU 1
+VERDE EQU 2
+	
+	
+TIEMPO EQU 20
+	
+	
+	AREA MYCODE, CODE
+		ENTRY 
+		EXPORT __main
 
 
+__main
 
-; Inicio del programa
-main:
-    loop:
-        ; Llamar a la subrutina ConfigurarSemaforos
-        BL ConfigurarSemaforos
 
-        
-        ; Esperar 25 segundos
-        BL EsperarTiempo ; Llamar a la subrutina de espera de tiempo
+	LDR r0, =VERDE 		; Semaforo vehicular 0 (Oeste)
+	LDR r1, =ROJO   	; Semaforo vehicular 1 (Sur)
+	LDR r2, =VERDE 		; Semaforo vehicular 2 (Este)
+	LDR r3, =ROJO   	; Semaforo vehicular 3 (Norte)
+	
+	LDR r4, =ROJO 		; Semaforo peatonal 0
+	LDR r5, =VERDE   	; Semaforo peatonal 1
+	LDR r6, =ROJO 		; Semaforo peatonal 2
+	LDR r7, =VERDE   	; Semaforo peatonal 3
+	
+	LDR r8, =TIEMPO 	; Tiempo de referencia
+	LDR r9, =0 			; Contador
+	
+	B loop
+	
+	
+loop
 
-        ; Llamar a la subrutina CambiarAmarillo0y2
-        BL CambiarAmarillo0y2
+	BL SentidoOesteEste
+	
+	BL EsperarTiempo 
 
-        ; Esperar 25 segundos
-        BL EsperarTiempo ; Llamar a la subrutina de espera de tiempo
+	BL CambiarAmarillo0y2
 
-        ; Llamar a la subrutina CambiarTodosSemaforos
-        BL CambiarTodosSemaforos
+	BL EsperarTiempo 
 
-        ; Esperar 25 segundos
-        BL EsperarTiempo ; Llamar a la subrutina de espera de tiempo
+	BL SentidoNorteSur
+	
+	BL EsperarTiempo 
 
-        ; Llamar a la subrutina CambiarAmarillo1y3
-        BL CambiarAmarillo1y3
+	BL CambiarAmarillo1y3
 
-        ; Esperar 25 segundos
-        BL EsperarTiempo ; Llamar a la subrutina de espera de tiempo
+	BL EsperarTiempo
 
-        ; Actualizar registros y otros valores necesarios para la próxima iteración
-
-        ; Salto incondicional al comienzo del loop (loop infinito)
-        B loop
+	B loop
 	
 
-; Subrutina para cambiar semáforo 0 y 2 a amarillo
-CambiarAmarillo0y2:
-    ; Cambiar semáforo 0 a amarillo
-    LDR R1, =SEMAFORO0 ; Cargar dirección de registro de control de semáforo 0
-    MOV R2, #AMARILLO ; Configurar semáforo 0 en amarillo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 0
+CambiarAmarillo0y2
 
-    ; Cambiar semáforo 2 a amarillo
-    LDR R1, =SEMAFORO2 ; Cargar dirección de registro de control de semáforo 2
-    MOV R2, #AMARILLO ; Configurar semáforo 2 en amarillo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 2
+    MOV R0, #AMARILLO
+    MOV R2, #AMARILLO
+    BX LR
 
-    BX LR ; Retornar de la subrutina
+CambiarAmarillo1y3
 
+    MOV R1, #AMARILLO 
+    MOV R3, #AMARILLO
+    BX LR
 
-; Subrutina para cambiar semáforo 1 y 3 a amarillo
-CambiarAmarillo1y3:
-    ; Cambiar semáforo 1 a amarillo
-    LDR R1, =SEMAFORO1 ; Cargar dirección de registro de control de semáforo 1
-    MOV R2, #AMARILLO ; Configurar semáforo 1 en amarillo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 1
+SentidoOesteEste
+    MOV R0, #VERDE
+    MOV R1, #ROJO 
+    MOV R2, #VERDE 
+    MOV R3, #ROJO
+	
+    MOV R4, #ROJO
+    MOV R5, #VERDE 
+    MOV R6, #ROJO
+    MOV R7, #VERDE
 
-    ; Cambiar semáforo 3 a amarillo
-    LDR R1, =SEMAFORO3 ; Cargar dirección de registro de control de semáforo 3
-    MOV R2, #AMARILLO ; Configurar semáforo 3 en amarillo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 3
-
-    BX LR ; Retornar de la subrutina
-
-
-; Subrutina para configurar semáforos y peatonales iniciales
-ConfigurarSemaforos:
-    LDR R1, =SEMAFORO0 ; Cargar dirección de registro de control de semáforo 0
-    MOV R2, #VERDE ; Configurar semáforo 0 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 0
-
-    LDR R1, =SEMAFORO1 ; Cargar dirección de registro de control de semáforo 1
-    MOV R2, #ROJO ; Configurar semáforo 1 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 1
-
-    LDR R1, =SEMAFORO2 ; Cargar dirección de registro de control de semáforo 2
-    MOV R2, #VERDE ; Configurar semáforo 2 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 2
-
-    LDR R1, =SEMAFORO3 ; Cargar dirección de registro de control de semáforo 3
-    MOV R2, #ROJO ; Configurar semáforo 3 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 3
-
-    LDR R1, =PEATONAL0 ; Cargar dirección de registro de control de peatonal 0
-    MOV R2, #ROJO ; Configurar peatonal 0 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 0
-
-    LDR R1, =PEATONAL1 ; Cargar dirección de registro de control de peatonal 1
-    MOV R2, #VERDE ; Configurar peatonal 1 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 1
-
-    LDR R1, =PEATONAL2 ; Cargar dirección de registro de control de peatonal 2
-    MOV R2, #ROJO ; Configurar peatonal 2 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 2
-
-    LDR R1, =PEATONAL3 ; Cargar dirección de registro de control de peatonal 3
-    MOV R2, #ROJO ; Configurar peatonal 3 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 3
-
-    ; Retornar de la subrutina
     BX LR
 
 
-CambiarTodosSemaforos:
-    ; Configurar semáforos y peatonales iniciales
-    LDR R1, =SEMAFORO0 ; Cargar dirección de registro de control de semáforo 0
-    MOV R2, #ROJO ; Configurar semáforo 0 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 0
-
-    LDR R1, =SEMAFORO1 ; Cargar dirección de registro de control de semáforo 1
-    MOV R2, #VERDE ; Configurar semáforo 1 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 1
-
-    LDR R1, =SEMAFORO2 ; Cargar dirección de registro de control de semáforo 2
-    MOV R2, #ROJO ; Configurar semáforo 2 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 2
-
-    LDR R1, =SEMAFORO3 ; Cargar dirección de registro de control de semáforo 3
-    MOV R2, #VERDE ; Configurar semáforo 3 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de semáforo 3
-
-    LDR R1, =PEATONAL0 ; Cargar dirección de registro de control de peatonal 0
-    MOV R2, #VERDE ; Configurar peatonal 0 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 0
-
-    LDR R1, =PEATONAL1 ; Cargar dirección de registro de control de peatonal 1
-    MOV R2, #ROJO ; Configurar peatonal 1 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 1
-
-    LDR R1, =PEATONAL2 ; Cargar dirección de registro de control de peatonal 2
-    MOV R2, #VERDE ; Configurar peatonal 2 en verde
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 2
-
-    LDR R1, =PEATONAL3 ; Cargar dirección de registro de control de peatonal 3
-    MOV R2, #ROJO ; Configurar peatonal 3 en rojo
-    STR R2, [R1] ; Escribir valor en registro de control de peatonal 3
+SentidoNorteSur
+    
+	MOV R0, #ROJO 
+    MOV R1, #VERDE
+    MOV R2, #ROJO
+    MOV R3, #VERDE
 	
-	BX LR ; Retornar de la subrutina
+    MOV R4, #VERDE
+    MOV R5, #ROJO
+    MOV R6, #VERDE
+    MOV R7, #ROJO
+	
+	BX LR
 
 
+EsperarTiempo
+	ADD r9,r9,#1; Contador += 1
+	SUBS r10, r8, r9 
+	
+	; if Contador != Tiempo
+	BNE EsperarTiempo 
+	
+	; Else
+	MOV r9, #0
+	BX LR
 
-; Subrutina para esperar 15 segundos
-Esperar15Segundos:
-    LDR R1, =TEMPORIZADOR ; Cargar dirección de registro de temporizador
-    MOV R2, #0 ; Reiniciar el temporizador (ponerlo en 0)
-    STR R2, [R1] ; Escribir valor en registro de temporizador
-
-    MOV R3, #15000 ; Cargar el valor 15000 en R3 (15 segundos en milisegundos)
-     
-Esperar15Segundos_Loop:
-    SUBS R3, R3, #1 ; Restar 1 a R3
-    BNE Esperar15Segundos_Loop ; Saltar al loop si R3 no es igual a 0
-    BX LR ; Retornar de la subrutina
-
-
-; Subrutina para esperar 30 segundos
-Esperar30Segundos:
-    LDR R1, =TEMPORIZADOR ; Cargar dirección de registro de temporizador
-    MOV R2, #0 ; Reiniciar el temporizador (ponerlo en 0)
-    STR R2, [R1] ; Escribir valor en registro de temporizador
-
-    MOV R3, #30000 ; Cargar el valor 30000 en R3 (30 segundos en milisegundos)
-
-Esperar30Segundos_Loop:
-    SUBS R3, R3, #1 ; Restar 1 a R3
-    BNE Esperar30Segundos_Loop ; Saltar al loop si R3 no es igual a 0
-    BX LR ; Retornar de la subrutina
-
-
-
-END
+	END
+	
+	
